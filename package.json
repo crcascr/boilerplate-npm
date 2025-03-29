@@ -1,5 +1,10 @@
 {
 	"name": "fcc-learn-npm-package-json",
+	"author": "Cristian Castillo Cruz",
+	"description": "A boilerplate project for FreeCodeCamp's Learn Node.js and Express",
+	"keywords": ["node", "express", "freecodecamp"],
+	"license": "MIT",
+	"version": "0.0.1",
 	"dependencies": {
 		"express": "^4.14.0"
 	},
