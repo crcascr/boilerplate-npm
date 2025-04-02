@@ -1,81 +1,155 @@
-require('dotenv').config();
-require('body-parser')
-let express = require('express');
-let app = express();
+require("dotenv").config();
 
-app.use(express.urlencoded({ extended: false }));
+const mongoose = require("mongoose");
 
-app.use((req, res, next) => {
-    console.log(`${req.method} ${req.path} - ${req.ip}`);
-    next();
-})
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 
-app.use('/public', express.static(__dirname + '/public'));
-console.log('Hello World')
-app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/views/index.html');
-})
-app.get('/json', (req, res) => {
-    let message = 'Hello json';
+const personSchema = new mongoose.Schema({
+  name: String,
+  age: Number,
+  favoriteFoods: [String],
+});
+let Person;
+Person = mongoose.model("Person", personSchema);
 
-    if (process.env.MESSAGE_STYLE === 'uppercase') {
-        message = message.toUpperCase();
+const createAndSavePerson = (done) => {
+  const person = new Person({
+    name: "Cristian",
+    age: 20,
+    favoriteFoods: ["Pasta", "Sushi"],
+  });
+
+  person.save(function (err, data) {
+    if (err) {
+      return done(err);
+    }
+    done(null, data);
+  });
+};
+
+const createManyPeople = (arrayOfPeople, done) => {
+  Person.create(arrayOfPeople, function (err, data) {
+    if (err) {
+      return done(err);
+    }
+    done(null, data);
+  });
+};
+
+const findPeopleByName = (personName, done) => {
+  Person.find({ name: personName }, function (err, data) {
+    if (err) {
+      return done(err);
+    }
+    done(null, data);
+  });
+};
+
+const findOneByFood = (food, done) => {
+  Person.findOne({ favoriteFoods: food }, function (err, data) {
+    if (err) {
+      return done(err);
+    }
+    done(null, data);
+  });
+};
+
+const findPersonById = (personId, done) => {
+  Person.findById(personId, function (err, data) {
+    if (err) {
+      return done(err);
+    }
+    done(null, data);
+  });
+};
+
+const findEditThenSave = (personId, done) => {
+  const foodToAdd = "hamburger";
+
+  Person.findById(personId, function (err, person) {
+    if (err) {
+      return done(err);
     }
 
-    res.json({ message });
-});
-app.get('/now', (req, res, next) => {    
-    req.time = new Date().toString();
-    next();
-}, (req, res) => {
-    res.json({ time: req.time });
-})
-app.get('/:word/echo', (req, res) => {    
-    res.json({ echo: req.params.word });
-})
-app.get('/name', (req, res) => {    
-    res.json({ name: `${req.query.first} ${req.query.last}` });
-})
-app.post('/name', (req, res) => {
-    let firstName = req.body.first;
-    let lastName = req.body.last;
-    res.json({ name: `${firstName} ${lastName}` });
-});
+    person.favoriteFoods.push(foodToAdd);
 
+    person.save(function (err, updatedPerson) {
+      if (err) {
+        return done(err);
+      }
+      done(null, updatedPerson);
+    });
+  });
+};
 
+const findAndUpdate = (personName, done) => {
+  const ageToSet = 20;
 
+  Person.findOneAndUpdate(
+    { name: personName },
+    { age: ageToSet },
+    { new: true },
+    function (err, data) {
+      if (err) {
+        return done(err);
+      }
+      done(null, data);
+    }
+  );
+};
 
+const removeById = (personId, done) => {
+  Person.findByIdAndRemove(personId, function (err, data) {
+    if (err) {
+      return done(err);
+    }
+    done(null, data);
+  })
+};
 
+const removeManyPeople = (done) => {
+  const nameToRemove = "Mary";
 
+  Person.remove({ name: nameToRemove }, function (err, data) {
+    if (err) {
+      return done(err);
+    }
+    done(null, data);
+  });
+};
 
+const queryChain = (done) => {
+  const foodToSearch = "burrito";
 
+  Person.find({ favoriteFoods: foodToSearch })
+    .sort({ name: 1 })
+    .limit(2)
+    .select({ age: 0 })
+    .exec(function (err, data) {
+      if (err) {
+        return done(err);
+      }
+      done(null, data);
+    });
+};
 
+/** **Well Done !!**
+/* You completed these challenges, let's go celebrate !
+ */
 
+//----- **DO NOT EDIT BELOW THIS LINE** ----------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- module.exports = app;
+exports.PersonModel = Person;
+exports.createAndSavePerson = createAndSavePerson;
+exports.findPeopleByName = findPeopleByName;
+exports.findOneByFood = findOneByFood;
+exports.findPersonById = findPersonById;
+exports.findEditThenSave = findEditThenSave;
+exports.findAndUpdate = findAndUpdate;
+exports.createManyPeople = createManyPeople;
+exports.removeById = removeById;
+exports.removeManyPeople = removeManyPeople;
+exports.queryChain = queryChain;
